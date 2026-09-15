@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון חיתוך תעלת לאמד</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0066CC, #004999);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header h1 { font-size: 1.3rem; font-weight: 600; }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 100px;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .calculator-panel { flex: 1; min-width: 0; }
+
+    .reference-panel {
+      flex: 0 0 310px;
+      position: sticky;
+      top: 16px;
+      align-self: flex-start;
+    }
+    .reference-panel svg {
+      width: 100%;
+      display: block;
+    }
+    .param-legend {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .param-legend-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .param-legend-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 3px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .param-legend-row:last-child { border-bottom: none; }
+    .param-legend-row .var { font-weight: 600; color: #0066CC; direction: ltr; }
+    .param-legend-row .desc { color: #666; }
+
+    /* Top-level section tabs */
+    .section-tabs {
+      display: flex;
+      background: #e9ecef;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .section-tab {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      background: transparent;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: color 0.2s;
+      position: relative;
+      z-index: 1;
+    }
+    .section-tab.active { color: #0066CC; }
+    .section-tab-bg {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      height: calc(100% - 8px);
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      transition: width 0.3s, transform 0.3s;
+    }
+
+    /* Mode tabs (sub-tabs) */
+    .mode-tabs {
+      display: flex;
+      background: #f0f4f8;
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 9px 5px;
+      border: none;
+      background: transparent;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: color 0.2s;
+      position: relative;
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .mode-tab.active { color: #0066CC; font-weight: 600; }
+    .mode-tab-bg {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      height: calc(100% - 6px);
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: width 0.3s, transform 0.3s;
+    }
+
+    .info-bar {
+      background: #E6F2FF;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+      color: #0066CC;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    /* Input Fields */
+    .input-group { margin-bottom: 12px; }
+    .input-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .input-label .unit { font-size: 0.75rem; color: #999; font-weight: 400; }
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .input-wrapper:focus-within { border-color: #0066CC; }
+    .input-wrapper.error { border-color: #ff3b30; }
+    .input-wrapper.result { background: #E6F2FF; border-color: #0066CC; }
+
+    .input-wrapper input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 12px 14px;
+      font-size: 1rem;
+      background: transparent;
+      direction: ltr;
+      text-align: right;
+    }
+    .input-wrapper.result input { color: #0066CC; font-weight: 600; cursor: default; }
+
+    .input-unit { padding: 0 12px; font-size: 0.85rem; color: #999; white-space: nowrap; }
+    .input-arrow { padding: 0 12px; color: #0066CC; }
+    .error-text { color: #ff3b30; font-size: 0.8rem; margin-top: 4px; }
+
+    /* Results Section */
+    .results-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .results-title { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 16px; }
+
+    .action-buttons { display: flex; gap: 8px; margin-top: 16px; }
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    .action-btn:hover { opacity: 0.85; }
+    .save-btn { background: #34C759; color: white; }
+    .share-btn { background: #0066CC; color: white; }
+
+    /* Saved Calculations */
+    .saved-section { margin-top: 24px; }
+    .saved-card {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .saved-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .saved-card-date { font-size: 0.8rem; color: #999; }
+    .saved-card-mode {
+      font-size: 0.75rem;
+      background: #E6F2FF;
+      color: #0066CC;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .saved-card-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 2px 0;
+    }
+    .saved-card-row .label { color: #666; }
+    .saved-card-row .value { font-weight: 500; direction: ltr; }
+    .saved-card-row.result-row .value { color: #0066CC; font-weight: 600; }
+    .saved-card-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .saved-card-actions button {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .delete-btn { background: #fff0f0; color: #ff3b30; }
+    .no-saved { text-align: center; color: #999; padding: 24px; font-size: 0.9rem; }
+
+    .section-divider { border: none; border-top: 1px solid #e0e0e0; margin: 20px 0; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #333;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .stepper-group { display: flex; flex-direction: column; border-left: 1px solid #e0e0e0; }
+    .stepper-btn {
+      width: 30px;
+      border: none;
+      background: #f8f9fa;
+      cursor: pointer;
+      font-size: 11px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .stepper-btn:first-child { border-bottom: 1px solid #e0e0e0; }
+    .stepper-btn:hover { background: #e2e6ea; }
+    .stepper-btn:active { background: #d0d4d8; }
+    .input-wrapper input { padding-right: 14px; }
+
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+
+    @media (max-width: 768px) {
+      .container { max-width: 600px; }
+      .main-layout { flex-direction: column; }
+      .reference-panel {
+        flex: none;
+        position: static;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .reference-panel svg { max-width: 220px; }
+      .param-legend { flex: 1; }
+    }
+
+    @media (max-width: 400px) {
+      .mode-tab { font-size: 0.72rem; padding: 8px 3px; }
+      .section-tab { font-size: 0.85rem; padding: 10px 4px; }
+      .header h1 { font-size: 1.1rem; }
+      .reference-panel { flex-direction: column; }
+      .reference-panel svg { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>מחשבון חיתוך תעלת לאמד</h1>
+  </div>
+
+  <div class="container">
+    <div class="main-layout">
+      <div class="calculator-panel">
+
+        <!-- Top-level Section Tabs -->
+        <div class="section-tabs" id="sectionTabs">
+          <div class="section-tab-bg" id="sectionTabBg"></div>
+          <button class="section-tab active" data-section="single" onclick="switchSection('single')">קוטר יחיד (D)</button>
+          <button class="section-tab" data-section="dual" onclick="switchSection('dual')">שני קטרים (D1 + D2)</button>
+        </div>
+
+        <!-- ===== Single D Content ===== -->
+        <div class="section-content active" id="singleContent">
+          <div class="mode-tabs" id="singleTabs">
+            <div class="mode-tab-bg" id="singleTabBg"></div>
+          </div>
+
+          <div class="info-bar">
+            <span id="singleModeInfoText"> </span>
+          </div>
+
+          <div class="section-title">הזן ערכים</div>
+          <div id="singleInputs"></div>
+
+          <div id="singleResultsSection" style="display: none;">
+            <div class="results-card">
+              <div class="results-title">תוצאות</div>
+              <div id="singleResults"></div>
+              <div class="action-buttons">
+                <button class="action-btn save-btn" onclick="saveCalculation()">שמור</button>
+                <button class="action-btn share-btn" onclick="shareCalculation()">שיתוף</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Dual D Content ===== -->
+        <div class="section-content" id="dualContent">
+          <div class="mode-tabs" id="dualTabs">
+            <div class="mode-tab-bg" id="dualTabBg"></div>
+          </div>
+
+          <div class="info-bar">
+            <span id="dualModeInfoText"> </span>
+          </div>
+
+          <div class="section-title">הזן ערכים</div>
+          <div id="dualInputs"></div>
+
+          <div id="dualResultsSection" style="display: none;">
+            <div class="results-card">
+              <div class="results-title">תוצאות</div>
+              <div id="dualResults"></div>
+              <div class="action-buttons">
+                <button class="action-btn save-btn" onclick="saveCalculation()">שמור</button>
+                <button class="action-btn share-btn" onclick="shareCalculation()">שיתוף</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Reference Image Panel -->
+      <div class="reference-panel">
+        <img src="1.jpg" alt="תרשים חיתוך S" style="width:100%; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+
+        <div class="param-legend">
+          <div class="param-legend-title">מילון פרמטרים</div>
+          <div class="param-legend-row"><span class="var">H</span><span class="desc">גובה כולל</span></div>
+          <div class="param-legend-row"><span class="var">D / D1 / D2</span><span class="desc">קוטר תעלה (עליון/תחתון)</span></div>
+          <div class="param-legend-row"><span class="var">F</span><span class="desc">בריחה (היסט אופקי)</span></div>
+          <div class="param-legend-row"><span class="var">r</span><span class="desc">רדיוס פנימי</span></div>
+          <div class="param-legend-row"><span class="var">L</span><span class="desc">אורך חיתוך מלבן</span></div>
+          <div class="param-legend-row"><span class="var">&alpha;</span><span class="desc">זווית חיתוך</span></div>
+          <div class="param-legend-row"><span class="var">T / T1 / T2</span><span class="desc">היסט קשת (עליון/תחתון)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="saved-section">
+      <div class="section-title">חישובים שמורים</div>
+      <div id="savedList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========================================
+    // STATE
+    // ========================================
+    let currentMode = 0;
+    let currentSection = 'single';
+    let lastResults = null;
+    let lastInputs = null;
+
+    const MODE_CONFIG = [
+      // --- Single D (modes 0-2) ---
+      {
+        section: 'single',
+        title: 'חישוב אורך חיתוך וזווית',
+        shortTitle: 'חישוב אורך חיתוך וזווית',
+        info: 'הזן גובה (H), קוטר (D), בריחה (F) ורדיוס (r) לחישוב אורך מלבן (L), זווית (\u03B1) ו-T',
+        inputs: [
+          { id: 'H', label: 'H (גובה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D', label: 'D (קוטר)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '300' }
+        ],
+        results: ['L', 'alpha', 'T']
+      },
+      {
+        section: 'single',
+        title: 'חישוב אורך חיתוך וגובה',
+        shortTitle: 'חישוב אורך חיתוך וגובה',
+        info: 'הזן זווית (\u03B1), קוטר (D), בריחה (F) ורדיוס (r) לחישוב T, אורך מלבן (L) וגובה (H)',
+        inputs: [
+          { id: 'alpha', label: '\u03B1 (זווית)', unit: '\u00B0', placeholder: '' },
+          { id: 'D', label: 'D (קוטר)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '300' }
+        ],
+        results: ['T', 'L', 'H']
+      },
+      {
+        section: 'single',
+        title: 'חישוב לפי אורך רצוי',
+        shortTitle: 'חישוב לפי אורך רצוי',
+        info: 'הזן אורך רצוי (L), קוטר (D), בריחה (F) ורדיוס (r) לחישוב גובה (H), זווית (\u03B1) ו-T',
+        inputs: [
+          { id: 'L', label: 'L (אורך רצוי)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D', label: 'D (קוטר)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
+        ],
+        results: ['H', 'alpha', 'T']
+      },
+      // --- Dual D (modes 3-5) ---
+      {
+        section: 'dual',
+        title: 'חישוב אורך חיתוך וזווית (2D)',
+        shortTitle: 'חישוב אורך חיתוך וזווית',
+        info: 'הזן גובה (H), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב אורך מלבן (L), זווית (\u03B1), T1 ו-T2',
+        inputs: [
+          { id: 'H', label: 'H (גובה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '300' }
+        ],
+        results: ['L', 'alpha', 'T1', 'T2']
+      },
+      {
+        section: 'dual',
+        title: 'חישוב אורך חיתוך וגובה (2D)',
+        shortTitle: 'חישוב אורך חיתוך וגובה',
+        info: 'הזן זווית (\u03B1), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב T1, T2, אורך מלבן (L) וגובה (H)',
+        inputs: [
+          { id: 'alpha', label: '\u03B1 (זווית)', unit: '\u00B0', placeholder: '' },
+          { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '300' }
+        ],
+        results: ['T1', 'T2', 'L', 'H']
+      },
+      {
+        section: 'dual',
+        title: 'חישוב לפי אורך רצוי (2D)',
+        shortTitle: 'חישוב לפי אורך רצוי',
+        info: 'הזן אורך רצוי (L), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב גובה (H), זווית (\u03B1), T1 ו-T2',
+        inputs: [
+          { id: 'L', label: 'L (אורך רצוי)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
+        ],
+        results: ['H', 'alpha', 'T1', 'T2']
+      }
+    ];
+
+    const RESULT_LABELS = {
+      L: 'L (אורך מלבן)',
+      alpha: '\u03B1 (זווית)',
+      T: 'T',
+      T1: 'T1 (עליון)',
+      T2: 'T2 (תחתון)',
+      H: 'H (גובה)'
+    };
+
+    const RESULT_UNITS = {
+      L: 'מ"מ',
+      alpha: '\u00B0',
+      T: 'מ"מ',
+      T1: 'מ"מ',
+      T2: 'מ"מ',
+      H: 'מ"מ'
+    };
+
+    // ========================================
+    // FORMULAS
+    // ========================================
+
+    function round4(v) { return parseFloat(v.toFixed(4)); }
+
+    // --- Single D ---
+    function calcMode0(H, D, F, r) {
+      const L = Math.sqrt(H * H - 2 * D * F + F * F - 4 * F * r);
+      const numerator = (D * H) + (2 * H * r) + (-D + F - 2 * r) * L;
+      const denominator = (-D * D) + (D * F) - (4 * D * r) + (2 * F * r) - (4 * r * r) - (H * L);
+      const alpha = -Math.atan(numerator / denominator) * (180 / Math.PI);
+      const T = (r + D / 2) * Math.tan((alpha / 2) * (Math.PI / 180));
+      return { L: round4(L), alpha: round4(alpha), T: round4(T) };
+    }
+
+    function calcMode1(alpha, D, F, r) {
+      const alphaRad = alpha * (Math.PI / 180);
+      const T = (r + D / 2) * Math.tan(alphaRad / 2);
+      const L = F / Math.sin(alphaRad) - 2 * T;
+      const H = 2 * T + F / Math.tan(alphaRad);
+      return { T: round4(T), L: round4(L), H: round4(H) };
+    }
+
+    function calcMode2(L, D, F, r) {
+      const H = Math.sqrt(L * L + 2 * D * F - F * F + 4 * F * r);
+      const numerator = (D * H) + (2 * H * r) + (-D + F - 2 * r) * L;
+      const denominator = (-D * D) + (D * F) - (4 * D * r) + (2 * F * r) - (4 * r * r) - (H * L);
+      const alpha = -Math.atan(numerator / denominator) * (180 / Math.PI);
+      const T = (r + D / 2) * Math.tan((alpha / 2) * (Math.PI / 180));
+      return { H: round4(H), alpha: round4(alpha), T: round4(T) };
+    }
+
+    // --- Dual D ---
+    function calcMode3(H, D1, D2, F, r) {
+      const L = Math.sqrt(H * H - F * (4 * r + D1 + D2 - F));
+      const alpha = 2 * Math.atan(F / (H + L));
+      const alphaDeg = alpha * (180 / Math.PI);
+      const t = Math.tan(alpha / 2);
+      const T1 = (r + D1 / 2) * t;
+      const T2 = (r + D2 / 2) * t;
+      return { L: round4(L), alpha: round4(alphaDeg), T1: round4(T1), T2: round4(T2) };
+    }
+
+    function calcMode4(alpha, D1, D2, F, r) {
+      const alphaRad = alpha * (Math.PI / 180);
+      const t = Math.tan(alphaRad / 2);
+      const T1 = (r + D1 / 2) * t;
+      const T2 = (r + D2 / 2) * t;
+      const L = F / Math.sin(alphaRad) - T1 - T2;
+      const H = T1 + T2 + F / Math.tan(alphaRad);
+      return { T1: round4(T1), T2: round4(T2), L: round4(L), H: round4(H) };
+    }
+
+    function calcMode5(L, D1, D2, F, r) {
+      const H = Math.sqrt(L * L + F * (4 * r + D1 + D2 - F));
+      const alpha = 2 * Math.atan(F / (H + L));
+      const alphaDeg = alpha * (180 / Math.PI);
+      const t = Math.tan(alpha / 2);
+      const T1 = (r + D1 / 2) * t;
+      const T2 = (r + D2 / 2) * t;
+      return { H: round4(H), alpha: round4(alphaDeg), T1: round4(T1), T2: round4(T2) };
+    }
+
+    // ========================================
+    // UI - SECTION SWITCHING
+    // ========================================
+
+    function switchSection(section) {
+      currentSection = section;
+
+      // Update section tabs
+      document.querySelectorAll('.section-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.section === section);
+      });
+
+      // Update section content visibility
+      document.getElementById('singleContent').classList.toggle('active', section === 'single');
+      document.getElementById('dualContent').classList.toggle('active', section === 'dual');
+
+      // Slide section tab background
+      updateSectionTabBg();
+
+      // Switch to first mode of the selected section
+      const firstMode = section === 'single' ? 0 : 3;
+      switchMode(firstMode);
+    }
+
+    function updateSectionTabBg() {
+      const tabs = document.querySelectorAll('.section-tab');
+      const bg = document.getElementById('sectionTabBg');
+      let activeTab = null;
+      tabs.forEach(t => { if (t.classList.contains('active')) activeTab = t; });
+      if (!activeTab || !bg) return;
+
+      const container = document.getElementById('sectionTabs');
+      const containerRect = container.getBoundingClientRect();
+      const tabRect = activeTab.getBoundingClientRect();
+
+      bg.style.width = tabRect.width + 'px';
+      bg.style.transform = 'translateX(' + (tabRect.right - containerRect.right) + 'px)';
+    }
+
+    // ========================================
+    // UI - MODE SWITCHING
+    // ========================================
+
+    function switchMode(mode) {
+      currentMode = mode;
+      const config = MODE_CONFIG[mode];
+      const section = config.section;
+
+      // Update mode tabs in the correct section
+      const tabsContainerId = section === 'single' ? 'singleTabs' : 'dualTabs';
+      document.querySelectorAll(`#${tabsContainerId} .mode-tab`).forEach(tab => {
+        tab.classList.toggle('active', Number(tab.dataset.mode) === mode);
+      });
+
+      // Slide mode tab background
+      updateModeTabBg(section);
+
+      // Update info text
+      const infoId = section === 'single' ? 'singleModeInfoText' : 'dualModeInfoText';
+      document.getElementById(infoId).textContent = config.info;
+
+      // Rebuild inputs
+      renderInputs();
+
+      // Clear results
+      const resultsId = section === 'single' ? 'singleResultsSection' : 'dualResultsSection';
+      document.getElementById(resultsId).style.display = 'none';
+      lastResults = null;
+      lastInputs = null;
+    }
+
+    function updateModeTabBg(section) {
+      const tabsContainerId = section === 'single' ? 'singleTabs' : 'dualTabs';
+      const bgId = section === 'single' ? 'singleTabBg' : 'dualTabBg';
+
+      const tabsContainer = document.getElementById(tabsContainerId);
+      const bg = document.getElementById(bgId);
+      const activeTab = tabsContainer.querySelector('.mode-tab.active');
+      if (!activeTab || !bg) return;
+
+      const containerRect = tabsContainer.getBoundingClientRect();
+      const tabRect = activeTab.getBoundingClientRect();
+
+      bg.style.width = tabRect.width + 'px';
+      bg.style.transform = 'translateX(' + (tabRect.right - containerRect.right) + 'px)';
+    }
+
+    function renderInputs() {
+      const config = MODE_CONFIG[currentMode];
+      const containerId = currentSection === 'single' ? 'singleInputs' : 'dualInputs';
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      config.inputs.forEach(inp => {
+        const group = document.createElement('div');
+        group.className = 'input-group';
+
+        const label = document.createElement('div');
+        label.className = 'input-label';
+        label.innerHTML = `${inp.label} <span class="unit">${inp.unit}</span>`;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-wrapper';
+        wrapper.id = `wrapper_${inp.id}`;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.id = `input_${inp.id}`;
+        input.placeholder = inp.placeholder || '';
+        input.value = inp.default || '';
+        input.addEventListener('input', function() {
+          this.value = this.value.replace(/[^0-9.]/g, '');
+          const parts = this.value.split('.');
+          if (parts.length > 2) this.value = parts[0] + '.' + parts.slice(1).join('');
+          clearError(inp.id);
+          tryCalculate();
+        });
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            stepValue(inp.id, inp.id === 'alpha' ? 0.1 : 1);
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            stepValue(inp.id, inp.id === 'alpha' ? -0.1 : -1);
+          }
+        });
+
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'input-unit';
+        unitSpan.textContent = inp.unit;
+
+        const step = inp.id === 'alpha' ? 0.1 : 1;
+        const stepperGroup = document.createElement('div');
+        stepperGroup.className = 'stepper-group';
+
+        const btnUp = document.createElement('button');
+        btnUp.className = 'stepper-btn';
+        btnUp.textContent = '\u25B2';
+        btnUp.type = 'button';
+        btnUp.addEventListener('mousedown', function(e) { e.preventDefault(); stepValue(inp.id, step); startRepeat(inp.id, step); });
+        btnUp.addEventListener('mouseup', stopRepeat);
+        btnUp.addEventListener('mouseleave', stopRepeat);
+        btnUp.addEventListener('touchstart', function(e) { e.preventDefault(); stepValue(inp.id, step); startRepeat(inp.id, step); }, { passive: false });
+        btnUp.addEventListener('touchend', stopRepeat);
+
+        const btnDown = document.createElement('button');
+        btnDown.className = 'stepper-btn';
+        btnDown.textContent = '\u25BC';
+        btnDown.type = 'button';
+        btnDown.addEventListener('mousedown', function(e) { e.preventDefault(); stepValue(inp.id, -step); startRepeat(inp.id, -step); });
+        btnDown.addEventListener('mouseup', stopRepeat);
+        btnDown.addEventListener('mouseleave', stopRepeat);
+        btnDown.addEventListener('touchstart', function(e) { e.preventDefault(); stepValue(inp.id, -step); startRepeat(inp.id, -step); }, { passive: false });
+        btnDown.addEventListener('touchend', stopRepeat);
+
+        stepperGroup.appendChild(btnUp);
+        stepperGroup.appendChild(btnDown);
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(unitSpan);
+        wrapper.appendChild(stepperGroup);
+        group.appendChild(label);
+        group.appendChild(wrapper);
+        container.appendChild(group);
+      });
+    }
+
+    // ========================================
+    // STEPPER
+    // ========================================
+
+    let repeatTimer = null;
+    let repeatInterval = null;
+
+    function stepValue(inputId, step) {
+      const input = document.getElementById(`input_${inputId}`);
+      if (!input) return;
+      let val = parseFloat(input.value) || 0;
+      val = Math.round((val + step) * 100) / 100;
+      if (val < 0.1) val = 0.1;
+      input.value = val;
+      clearError(inputId);
+      tryCalculate();
+    }
+
+    function startRepeat(inputId, step) {
+      stopRepeat();
+      repeatTimer = setTimeout(function() {
+        repeatInterval = setInterval(function() { stepValue(inputId, step); }, 80);
+      }, 400);
+    }
+
+    function stopRepeat() {
+      if (repeatTimer) { clearTimeout(repeatTimer); repeatTimer = null; }
+      if (repeatInterval) { clearInterval(repeatInterval); repeatInterval = null; }
+    }
+
+    // ========================================
+    // AUTO-CALCULATE
+    // ========================================
+
+    function tryCalculate() {
+      const config = MODE_CONFIG[currentMode];
+      const values = {};
+      let allValid = true;
+
+      config.inputs.forEach(inp => {
+        const val = document.getElementById(`input_${inp.id}`).value.trim();
+        if (!val || isNaN(Number(val)) || Number(val) <= 0) {
+          allValid = false;
+        } else {
+          values[inp.id] = Number(val);
+        }
+      });
+
+      const resultsId = currentSection === 'single' ? 'singleResultsSection' : 'dualResultsSection';
+
+      if (!allValid) {
+        document.getElementById(resultsId).style.display = 'none';
+        lastResults = null;
+        lastInputs = null;
+        return;
+      }
+
+      let results;
+      try {
+        if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
+        else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
+        else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
+      } catch (e) {
+        document.getElementById(resultsId).style.display = 'none';
+        return;
+      }
+
+      for (const [key, val] of Object.entries(results)) {
+        if (!isFinite(val)) {
+          document.getElementById(resultsId).style.display = 'none';
+          return;
+        }
+      }
+
+      lastResults = results;
+      lastInputs = { ...values };
+      renderResults(results);
+    }
+
+    function clearError(id) {
+      const wrapper = document.getElementById(`wrapper_${id}`);
+      if (wrapper) wrapper.classList.remove('error');
+      const errEl = document.getElementById(`error_${id}`);
+      if (errEl) errEl.remove();
+    }
+
+    function showError(id, msg) {
+      const wrapper = document.getElementById(`wrapper_${id}`);
+      if (wrapper) wrapper.classList.add('error');
+      const input = document.getElementById(`input_${id}`);
+      if (input && !document.getElementById(`error_${id}`)) {
+        const err = document.createElement('div');
+        err.className = 'error-text';
+        err.id = `error_${id}`;
+        err.textContent = msg;
+        wrapper.parentElement.appendChild(err);
+      }
+    }
+
+    // ========================================
+    // CALCULATE
+    // ========================================
+
+    function calculate() {
+      const config = MODE_CONFIG[currentMode];
+      const values = {};
+      let hasError = false;
+
+      config.inputs.forEach(inp => {
+        const val = document.getElementById(`input_${inp.id}`).value.trim();
+        if (!val || isNaN(Number(val)) || Number(val) <= 0) {
+          showError(inp.id, `${inp.id} נדרש וחייב להיות גדול מ-0`);
+          hasError = true;
+        } else {
+          values[inp.id] = Number(val);
+        }
+      });
+
+      if (hasError) return;
+
+      let results;
+      try {
+        if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
+        else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
+        else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
+      } catch (e) {
+        showToast('שגיאת חישוב: ' + e.message);
+        return;
+      }
+
+      for (const [key, val] of Object.entries(results)) {
+        if (!isFinite(val)) {
+          showToast('תוצאות לא תקינות - בדוק את הקלט');
+          return;
+        }
+      }
+
+      lastResults = results;
+      lastInputs = { ...values };
+      renderResults(results);
+    }
+
+    function renderResults(results) {
+      const resultsId = currentSection === 'single' ? 'singleResultsSection' : 'dualResultsSection';
+      const containerId = currentSection === 'single' ? 'singleResults' : 'dualResults';
+      const section = document.getElementById(resultsId);
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      for (const [key, val] of Object.entries(results)) {
+        const group = document.createElement('div');
+        group.className = 'input-group';
+
+        const label = document.createElement('div');
+        label.className = 'input-label';
+        label.innerHTML = `${RESULT_LABELS[key]} <span class="unit">${RESULT_UNITS[key]}</span>`;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-wrapper result';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = val;
+        input.readOnly = true;
+
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'input-unit';
+        unitSpan.textContent = RESULT_UNITS[key];
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(unitSpan);
+        group.appendChild(label);
+        group.appendChild(wrapper);
+        container.appendChild(group);
+      }
+
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ========================================
+    // SAVE / SHARE
+    // ========================================
+
+    function getSavedCalculations() {
+      try { return JSON.parse(localStorage.getItem('lamed_calculations') || '[]'); } catch { return []; }
+    }
+
+    function saveCalculation() {
+      if (!lastResults || !lastInputs) { showToast('אין מה לשמור - בצע חישוב תחילה'); return; }
+      const calc = {
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString('he-IL'),
+        mode: currentMode,
+        modeTitle: MODE_CONFIG[currentMode].title,
+        inputs: lastInputs,
+        results: lastResults
+      };
+      const saved = getSavedCalculations();
+      saved.unshift(calc);
+      localStorage.setItem('lamed_calculations', JSON.stringify(saved));
+      renderSaved();
+      showToast('החישוב נשמר בהצלחה');
+    }
+
+    function deleteCalculation(id) {
+      const saved = getSavedCalculations().filter(c => c.id !== id);
+      localStorage.setItem('lamed_calculations', JSON.stringify(saved));
+      renderSaved();
+      showToast('נמחק');
+    }
+
+    function shareCalculation() {
+      if (!lastResults || !lastInputs) { showToast('אין מה לשתף - בצע חישוב תחילה'); return; }
+      let msg = `תוצאות מחשבון תעלת לאמד\nמצב: ${MODE_CONFIG[currentMode].title}\n\nקלט:\n`;
+      for (const [k, v] of Object.entries(lastInputs)) msg += `  ${k}: ${v}\n`;
+      msg += `\nתוצאות:\n`;
+      for (const [k, v] of Object.entries(lastResults)) msg += `  ${RESULT_LABELS[k]}: ${v} ${RESULT_UNITS[k]}\n`;
+
+      if (navigator.share) { navigator.share({ text: msg }).catch(() => {}); }
+      else if (navigator.clipboard) { navigator.clipboard.writeText(msg).then(() => { showToast('הועתק לוח'); }); }
+      else { showToast('שיתוף לא זמין'); }
+    }
+
+    function renderSaved() {
+      const container = document.getElementById('savedList');
+      const saved = getSavedCalculations();
+      if (saved.length === 0) { container.innerHTML = '<div class="no-saved">אין חישובים שמורים</div>'; return; }
+
+      container.innerHTML = saved.map(calc => {
+        const inputRows = Object.entries(calc.inputs).map(([k, v]) =>
+          `<div class="saved-card-row"><span class="label">${k}</span><span class="value">${v}</span></div>`
+        ).join('');
+        const resultRows = Object.entries(calc.results).map(([k, v]) =>
+          `<div class="saved-card-row result-row"><span class="label">${RESULT_LABELS[k] || k}</span><span class="value">${v} ${RESULT_UNITS[k] || ''}</span></div>`
+        ).join('');
+        return `
+          <div class="saved-card">
+            <div class="saved-card-header">
+              <span class="saved-card-date">${calc.date}</span>
+              <span class="saved-card-mode">${calc.modeTitle}</span>
+            </div>
+            ${inputRows}
+            <hr style="border:none;border-top:1px solid #eee;margin:6px 0;">
+            ${resultRows}
+            <div class="saved-card-actions">
+              <button class="delete-btn" onclick="deleteCalculation('${calc.id}')">מחק</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ========================================
+    // TOAST
+    // ========================================
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ========================================
+    // TAB RENDERING
+    // ========================================
+
+    function renderTabs() {
+      const singleContainer = document.getElementById('singleTabs');
+      const dualContainer = document.getElementById('dualTabs');
+      singleContainer.querySelectorAll('.mode-tab').forEach(t => t.remove());
+      dualContainer.querySelectorAll('.mode-tab').forEach(t => t.remove());
+
+      MODE_CONFIG.forEach((config, i) => {
+        const tab = document.createElement('button');
+        tab.className = 'mode-tab';
+        tab.dataset.mode = i;
+        tab.textContent = config.shortTitle;
+        tab.onclick = () => switchMode(i);
+
+        if (config.section === 'single') singleContainer.appendChild(tab);
+        else dualContainer.appendChild(tab);
+      });
+    }
+
+    // ========================================
+    // INIT
+    // ========================================
+
+    window.addEventListener('load', () => {
+      renderTabs();
+      switchSection('single');
+      renderSaved();
+    });
+
+    window.addEventListener('resize', () => {
+      updateSectionTabBg();
+      updateModeTabBg('single');
+      updateModeTabBg('dual');
+    });
+  </script>
+</body>
+</html>
