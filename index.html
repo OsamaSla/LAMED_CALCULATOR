@@ -492,42 +492,45 @@
       // --- Dual D (modes 3-5) ---
       {
         section: 'dual',
-        title: 'חישוב רדיוס וזווית למלבן (2D)',
-        shortTitle: 'חישוב רדיוס וזווית',
-        info: 'הזן גובה (H), קטרים (D1, D2) ובריחה (F) - הרדיוס (r) והזווית (\u03B1)מחשבים אוטומטית để שהחיתוך יהיה מלבן עם 90\u00B0',
+        title: 'חישוב אורך חיתוך וזווית (2D)',
+        shortTitle: 'חישוב אורך חיתוך וזווית',
+        info: 'הזן גובה (H), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב L1, L2, \u03B11 ו-\u03B12',
         inputs: [
           { id: 'H', label: 'H (גובה)', unit: 'מ"מ', placeholder: '' },
           { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
-          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
         ],
-        results: ['rTop', 'rBottom', 'alpha1', 'alpha2', 'L1', 'L2', 'rectW']
+        results: ['L1', 'L2', 'alpha1', 'alpha2']
       },
       {
         section: 'dual',
-        title: 'חישוב גובה לפי רדיוס (2D)',
-        shortTitle: 'חישוב גובה לפי רדיוס',
-        info: 'הזן רדיוס (r), קטרים (D1, D2) ובריחה (F) לחישוב גובה (H), אורך חיתוך (L) ורוחב מלבן',
+        title: 'חישוב אורך חיתוך וגובה (2D)',
+        shortTitle: 'חישוב אורך חיתוך וגובה',
+        info: 'הזן זווית (\u03B1), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב L1, L2 וגובה (H)',
         inputs: [
-          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '' },
+          { id: 'alpha', label: '\u03B1 (זווית)', unit: '\u00B0', placeholder: '' },
           { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
-          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
         ],
-        results: ['H', 'L', 'rTop', 'rBottom', 'alpha1', 'alpha2', 'rectW']
+        results: ['L1', 'L2', 'H']
       },
       {
         section: 'dual',
         title: 'חישוב לפי אורך רצוי (2D)',
         shortTitle: 'חישוב לפי אורך רצוי',
-        info: 'הזן אורך רצוי (L), קטרים (D1, D2) ובריחה (F) לחישוב גובה (H), רדיוס (r) ורוחב מלבן',
+        info: 'הזן אורך רצוי (L), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב גובה (H), \u03B11 ו-\u03B12',
         inputs: [
           { id: 'L', label: 'L (אורך רצוי)', unit: 'מ"מ', placeholder: '' },
           { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
-          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
+          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
         ],
-        results: ['H', 'rTop', 'rBottom', 'alpha1', 'alpha2', 'rectW']
+        results: ['H', 'alpha1', 'alpha2']
       }
     ];
 
@@ -538,14 +541,8 @@
       alpha: '\u03B1 (זווית)',
       alpha1: '\u03B11 (זווית חיתוך תחתונה)',
       alpha2: '\u03B12 (זווית חיתוך עליונה)',
-      rTop: 'rTop (רדיוס קשת עליונה)',
-      rBottom: 'rBottom (רדיוס קשת תחתונה)',
-      T: 'T',
-      T1: 'T1 (עליון)',
-      T2: 'T2 (תחתון)',
       H: 'H (גובה)',
-      r: 'r (רדיוס פנימי)',
-      rectW: '\u03C1 (רוחב מלבן)'
+      r: 'r (רדיוס)'
     };
 
     const RESULT_UNITS = {
@@ -555,14 +552,8 @@
       alpha: '\u00B0',
       alpha1: '\u00B0',
       alpha2: '\u00B0',
-      rTop: 'מ"מ',
-      rBottom: 'מ"מ',
-      T: 'מ"מ',
-      T1: 'מ"מ',
-      T2: 'מ"מ',
       H: 'מ"מ',
-      r: 'מ"מ',
-      rectW: 'מ"מ'
+      r: 'מ"מ'
     };
 
     // ========================================
@@ -599,47 +590,33 @@
     }
 
     // --- Dual D ---
-    function calcMode3(H, D1, D2, F) {
-      const r = (H - D2) / 2;
-      if (r <= 0) throw new Error('H חייב להיות גדול מ-D2');
-      const rectW = D2 + F - H;
-      if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי (D2+F > H)');
+    function calcMode3(H, D1, D2, F, r) {
       const F1 = D2 + F - D1;
-      const L1 = (H + D2) / 2;
-      const L2 = (H + D2) / 2;
+      if (F1 <= 0) throw new Error('F1 חייב להיות חיובי');
+      const L1 = Math.sqrt(H * H - F1 * (4 * r + 2 * D2 - F1));
+      const L2 = Math.sqrt(H * H - F * (4 * r + 2 * D1 - F));
       const alpha1 = 2 * Math.atan(F1 / (H + L1)) * (180 / Math.PI);
       const alpha2 = 2 * Math.atan(F / (H + L2)) * (180 / Math.PI);
-      const rBottom = r;
-      const rTop = r + D2;
-      return { rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), L1: round4(L1), L2: round4(L2), rectW: round4(rectW) };
+      return { L1: round4(L1), L2: round4(L2), alpha1: round4(alpha1), alpha2: round4(alpha2) };
     }
 
-    function calcMode4(r, D1, D2, F) {
-      if (r <= 0) throw new Error('r חייב להיות חיובי');
-      const rectW = F - 2 * r;
-      if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי (F > 2r)');
-      const H = 2 * r + D2;
-      const L = r + D2;
+    function calcMode4(alpha, D1, D2, F, r) {
+      const alphaRad = alpha * (Math.PI / 180);
       const F1 = D2 + F - D1;
-      const alpha1 = 2 * Math.atan(F1 / (H + L)) * (180 / Math.PI);
-      const alpha2 = 2 * Math.atan(F / (H + L)) * (180 / Math.PI);
-      const rBottom = r;
-      const rTop = r + D2;
-      return { H: round4(H), L: round4(L), rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), rectW: round4(rectW) };
+      const T1 = (r + D1 / 2) * Math.tan(alphaRad / 2);
+      const T2 = (r + D2 / 2) * Math.tan(alphaRad / 2);
+      const L1 = F1 / Math.sin(alphaRad) - T1 - T2;
+      const L2 = F / Math.sin(alphaRad) - T1 - T2;
+      const H = T1 + T2 + F / Math.tan(alphaRad);
+      return { L1: round4(L1), L2: round4(L2), H: round4(H) };
     }
 
-    function calcMode5(L, D1, D2, F) {
-      const r = L - D2;
-      if (r <= 0) throw new Error('L חייב להיות גדול מ-D2');
-      const rectW = 2 * D2 + F - 2 * L;
-      if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי');
-      const H = 2 * L - D2;
+    function calcMode5(L, D1, D2, F, r) {
       const F1 = D2 + F - D1;
+      const H = Math.sqrt(L * L + F * (4 * r + 2 * D1 - F));
       const alpha1 = 2 * Math.atan(F1 / (H + L)) * (180 / Math.PI);
       const alpha2 = 2 * Math.atan(F / (H + L)) * (180 / Math.PI);
-      const rBottom = r;
-      const rTop = r + D2;
-      return { H: round4(H), rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), rectW: round4(rectW) };
+      return { H: round4(H), alpha1: round4(alpha1), alpha2: round4(alpha2) };
     }
 
     // ========================================
@@ -878,9 +855,9 @@
         if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
         else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
         else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
-        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F);
-        else if (currentMode === 4) results = calcMode4(values.r, values.D1, values.D2, values.F);
-        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
       } catch (e) {
         document.getElementById(resultsId).style.display = 'none';
         return;
@@ -945,9 +922,9 @@
         if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
         else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
         else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
-        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F);
-        else if (currentMode === 4) results = calcMode4(values.r, values.D1, values.D2, values.F);
-        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
       } catch (e) {
         showToast('שגיאת חישוב: ' + e.message);
         return;
