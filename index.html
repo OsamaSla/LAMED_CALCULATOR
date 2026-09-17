@@ -491,17 +491,16 @@
       // --- Dual D (modes 3-5) ---
       {
         section: 'dual',
-        title: 'חישוב אורך חיתוך וזווית (2D)',
-        shortTitle: 'חישוב אורך חיתוך וזווית',
-        info: 'הזן גובה (H), קטרים (D1, D2), בריחה (F) ורדיוס (r) לחישוב L1, L2, \u03B11, \u03B12, T1 ו-T2',
+        title: 'חישוב רדיוס וזווית למלבן (2D)',
+        shortTitle: 'חישוב רדיוס וזווית',
+        info: 'הזן גובה (H), קטרים (D1, D2) ובריחה (F) - הרדיוס (r) והזווית (\u03B1)מחשבים אוטומטית để שהחיתוך יהיה מלבן עם 90\u00B0',
         inputs: [
           { id: 'H', label: 'H (גובה)', unit: 'מ"מ', placeholder: '' },
           { id: 'D1', label: 'D1 (קוטר עליון)', unit: 'מ"מ', placeholder: '' },
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
-          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' },
-          { id: 'r', label: 'r (רדיוס)', unit: 'מ"מ', placeholder: '', default: '150' }
+          { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
         ],
-        results: ['L1', 'L2', 'alpha1', 'alpha2', 'T1', 'T2']
+        results: ['r', 'alpha', 'L1', 'L2', 'T1', 'T2', 'rectW']
       },
       {
         section: 'dual',
@@ -543,7 +542,9 @@
       T: 'T',
       T1: 'T1 (עליון)',
       T2: 'T2 (תחתון)',
-      H: 'H (גובה)'
+      H: 'H (גובה)',
+      r: 'r (רדיוס פנימי)',
+      rectW: '\u03C1 (רוחב מלבן)'
     };
 
     const RESULT_UNITS = {
@@ -556,7 +557,9 @@
       T: 'מ"מ',
       T1: 'מ"מ',
       T2: 'מ"מ',
-      H: 'מ"מ'
+      H: 'מ"מ',
+      r: 'מ"מ',
+      rectW: 'מ"מ'
     };
 
     // ========================================
@@ -593,18 +596,16 @@
     }
 
     // --- Dual D ---
-    function calcMode3(H, D1, D2, F, r) {
-      const F1 = D2 + F - D1;
-      if (F1 <= 0) throw new Error('F1 must be positive');
-      const L1 = Math.sqrt(H * H - F1 * (4 * r + 2 * D2 - F1));
-      const L2 = Math.sqrt(H * H - F * (4 * r + 2 * D1 - F));
-      const alpha1 = 2 * Math.atan(F1 / (H + L1));
-      const alpha2 = 2 * Math.atan(F / (H + L2));
-      const alpha1Deg = alpha1 * (180 / Math.PI);
-      const alpha2Deg = alpha2 * (180 / Math.PI);
-      const T1 = (r + D1 / 2) * Math.tan(alpha2 / 2);
-      const T2 = (r + D2 / 2) * Math.tan(alpha1 / 2);
-      return { L1: round4(L1), L2: round4(L2), alpha1: round4(alpha1Deg), alpha2: round4(alpha2Deg), T1: round4(T1), T2: round4(T2) };
+    function calcMode3(H, D1, D2, F) {
+      const r = (H - D2) / 2;
+      if (r <= 0) throw new Error('H must be greater than D2');
+      const alpha = 90;
+      const L1 = (H + D2) / 2;
+      const L2 = (H + D2) / 2;
+      const T1 = r;
+      const T2 = r + D2;
+      const rectW = D2 + F - H;
+      return { r: round4(r), alpha: round4(alpha), L1: round4(L1), L2: round4(L2), T1: round4(T1), T2: round4(T2), rectW: round4(rectW) };
     }
 
     function calcMode4(alpha, D1, D2, F, r) {
@@ -866,7 +867,7 @@
         if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
         else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
         else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
-        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F);
         else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
         else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
       } catch (e) {
@@ -933,7 +934,7 @@
         if (currentMode === 0) results = calcMode0(values.H, values.D, values.F, values.r);
         else if (currentMode === 1) results = calcMode1(values.alpha, values.D, values.F, values.r);
         else if (currentMode === 2) results = calcMode2(values.L, values.D, values.F, values.r);
-        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F, values.r);
+        else if (currentMode === 3) results = calcMode3(values.H, values.D1, values.D2, values.F);
         else if (currentMode === 4) results = calcMode4(values.alpha, values.D1, values.D2, values.F, values.r);
         else if (currentMode === 5) results = calcMode5(values.L, values.D1, values.D2, values.F, values.r);
       } catch (e) {
