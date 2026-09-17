@@ -501,7 +501,7 @@
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
           { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
         ],
-        results: ['r', 'alpha', 'L1', 'L2', 'rectW']
+        results: ['rTop', 'rBottom', 'alpha1', 'alpha2', 'L1', 'L2', 'rectW']
       },
       {
         section: 'dual',
@@ -514,7 +514,7 @@
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
           { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
         ],
-        results: ['H', 'L', 'alpha', 'rectW']
+        results: ['H', 'L', 'rTop', 'rBottom', 'alpha1', 'alpha2', 'rectW']
       },
       {
         section: 'dual',
@@ -527,7 +527,7 @@
           { id: 'D2', label: 'D2 (קוטר תחתון)', unit: 'מ"מ', placeholder: '' },
           { id: 'F', label: 'F (בריחה)', unit: 'מ"מ', placeholder: '' }
         ],
-        results: ['H', 'r', 'alpha', 'rectW']
+        results: ['H', 'rTop', 'rBottom', 'alpha1', 'alpha2', 'rectW']
       }
     ];
 
@@ -536,8 +536,10 @@
       L1: 'L1 (אורך חיתוך שמאל)',
       L2: 'L2 (אורך חיתוך ימין)',
       alpha: '\u03B1 (זווית)',
-      alpha1: '\u03B11 (זווית תחתונה)',
-      alpha2: '\u03B12 (זווית עליונה)',
+      alpha1: '\u03B11 (זווית חיתוך תחתונה)',
+      alpha2: '\u03B12 (זווית חיתוך עליונה)',
+      rTop: 'rTop (רדיוס קשת עליונה)',
+      rBottom: 'rBottom (רדיוס קשת תחתונה)',
       T: 'T',
       T1: 'T1 (עליון)',
       T2: 'T2 (תחתון)',
@@ -553,6 +555,8 @@
       alpha: '\u00B0',
       alpha1: '\u00B0',
       alpha2: '\u00B0',
+      rTop: 'מ"מ',
+      rBottom: 'מ"מ',
       T: 'מ"מ',
       T1: 'מ"מ',
       T2: 'מ"מ',
@@ -600,12 +604,14 @@
       if (r <= 0) throw new Error('H חייב להיות גדול מ-D2');
       const rectW = D2 + F - H;
       if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי (D2+F > H)');
-      const alpha = 90;
+      const F1 = D2 + F - D1;
       const L1 = (H + D2) / 2;
       const L2 = (H + D2) / 2;
-      const T1 = r;
-      const T2 = r + D2;
-      return { r: round4(r), alpha: round4(alpha), L1: round4(L1), L2: round4(L2), T1: round4(T1), T2: round4(T2), rectW: round4(rectW) };
+      const alpha1 = 2 * Math.atan(F1 / (H + L1)) * (180 / Math.PI);
+      const alpha2 = 2 * Math.atan(F / (H + L2)) * (180 / Math.PI);
+      const rBottom = r;
+      const rTop = r + D2;
+      return { rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), L1: round4(L1), L2: round4(L2), rectW: round4(rectW) };
     }
 
     function calcMode4(r, D1, D2, F) {
@@ -614,10 +620,12 @@
       if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי (F > 2r)');
       const H = 2 * r + D2;
       const L = r + D2;
-      const alpha = 90;
-      const T1 = r;
-      const T2 = r + D2;
-      return { H: round4(H), L: round4(L), alpha: round4(alpha), T1: round4(T1), T2: round4(T2), rectW: round4(rectW) };
+      const F1 = D2 + F - D1;
+      const alpha1 = 2 * Math.atan(F1 / (H + L)) * (180 / Math.PI);
+      const alpha2 = 2 * Math.atan(F / (H + L)) * (180 / Math.PI);
+      const rBottom = r;
+      const rTop = r + D2;
+      return { H: round4(H), L: round4(L), rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), rectW: round4(rectW) };
     }
 
     function calcMode5(L, D1, D2, F) {
@@ -626,10 +634,12 @@
       const rectW = 2 * D2 + F - 2 * L;
       if (rectW <= 0) throw new Error('רוחב המלבן חייב להיות חיובי');
       const H = 2 * L - D2;
-      const alpha = 90;
-      const T1 = r;
-      const T2 = L;
-      return { H: round4(H), r: round4(r), alpha: round4(alpha), T1: round4(T1), T2: round4(T2), rectW: round4(rectW) };
+      const F1 = D2 + F - D1;
+      const alpha1 = 2 * Math.atan(F1 / (H + L)) * (180 / Math.PI);
+      const alpha2 = 2 * Math.atan(F / (H + L)) * (180 / Math.PI);
+      const rBottom = r;
+      const rTop = r + D2;
+      return { H: round4(H), rTop: round4(rTop), rBottom: round4(rBottom), alpha1: round4(alpha1), alpha2: round4(alpha2), rectW: round4(rectW) };
     }
 
     // ========================================
@@ -962,7 +972,10 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
 
+      const allowedKeys = MODE_CONFIG[currentMode].results;
       for (const [key, val] of Object.entries(results)) {
+        if (!allowedKeys.includes(key)) continue;
+
         const group = document.createElement('div');
         group.className = 'input-group';
 
