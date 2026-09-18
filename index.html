@@ -514,8 +514,8 @@
               <h3>מצב 3 — חישוב L1, L2, &alpha;1, &alpha;2 (נתונים: H, D1, D2, F, r)</h3>
               <span class="formula-line">L1 = &radic;(H&sup2; &minus; F1 &middot; (4r + 2D2 &minus; F1))</span>
               <span class="formula-line">L2 = &radic;(H&sup2; &minus; F &middot; (4r + 2D1 &minus; F))</span>
-              <span class="formula-line">&alpha;1 = 2 &middot; atan( F1 / (H + L1) )</span>
-              <span class="formula-line">&alpha;2 = 2 &middot; atan( F / (H + L2) )</span>
+              <span class="formula-line">&alpha;1 = atan( (H&middot;F1 &minus; r&sup2;) / (F1 &middot; (F1 &minus; r)) )</span>
+              <span class="formula-line">&alpha;2 = atan( (F&middot;H &minus; r&sup2;) / (H&sup2; + H&middot;r + r&sup2;) )</span>
             </div>
 
             <div class="formula-mode">
@@ -530,8 +530,8 @@
             <div class="formula-mode">
               <h3>מצב 5 — חישוב H, &alpha;1, &alpha;2 (נתונים: L, D1, D2, F, r)</h3>
               <span class="formula-line">H = &radic;(L&sup2; + F &middot; (4r + 2D1 &minus; F))</span>
-              <span class="formula-line">&alpha;1 = 2 &middot; atan( F1 / (H + L) )</span>
-              <span class="formula-line">&alpha;2 = 2 &middot; atan( F / (H + L) )</span>
+              <span class="formula-line">&alpha;1 = atan( (H&middot;F1 &minus; r&sup2;) / (F1 &middot; (F1 &minus; r)) )</span>
+              <span class="formula-line">&alpha;2 = atan( (F&middot;H &minus; r&sup2;) / (H&sup2; + H&middot;r + r&sup2;) )</span>
             </div>
           </div>
 
@@ -723,8 +723,8 @@
       if (F1 <= 0) throw new Error('F1 חייב להיות חיובי');
       const L1 = Math.sqrt(H * H - F1 * (4 * r + 2 * D2 - F1));
       const L2 = Math.sqrt(H * H - F * (4 * r + 2 * D1 - F));
-      const alpha1 = 2 * Math.atan(F1 / (H + L1)) * (180 / Math.PI);
-      const alpha2 = 2 * Math.atan(F / (H + L2)) * (180 / Math.PI);
+      const alpha1 = Math.atan((H * F1 - r * r) / (F1 * (F1 - r))) * (180 / Math.PI);
+      const alpha2 = Math.atan((F * H - r * r) / (H * H + H * r + r * r)) * (180 / Math.PI);
       return { L1: round4(L1), L2: round4(L2), alpha1: round4(alpha1), alpha2: round4(alpha2) };
     }
 
@@ -742,8 +742,8 @@
     function calcMode5(L, D1, D2, F, r) {
       const F1 = D2 + F - D1;
       const H = Math.sqrt(L * L + F * (4 * r + 2 * D1 - F));
-      const alpha1 = 2 * Math.atan(F1 / (H + L)) * (180 / Math.PI);
-      const alpha2 = 2 * Math.atan(F / (H + L)) * (180 / Math.PI);
+      const alpha1 = Math.atan((H * F1 - r * r) / (F1 * (F1 - r))) * (180 / Math.PI);
+      const alpha2 = Math.atan((F * H - r * r) / (H * H + H * r + r * r)) * (180 / Math.PI);
       return { H: round4(H), alpha1: round4(alpha1), alpha2: round4(alpha2) };
     }
 
